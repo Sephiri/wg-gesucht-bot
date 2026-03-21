@@ -20,13 +20,18 @@ A dockerized automation tool for WG-Gesucht, built with Python and Playwright. T
 ```bash
 git clone git@github.com:Sephiri/wg-gesucht-bot.git
 cd wg-gesucht-bot
+```
 
 ### 2. Configure Environment Variables
+```text
 TELEGRAM_TOKEN=your_bot_token
 TELEGRAM_CHAT_ID=your_chat_id
 ASSET_IDS=id1,id2,...  
 WG_GESUCHT_EMAIL=your_email
 WG_GESUCHT_PASSWORD=your_password
+```
 
 ### 3. Launch
+```bash
 docker compose up -d --build
+```

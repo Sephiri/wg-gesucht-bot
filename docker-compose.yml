@@ -1,0 +1,10 @@
+services:
+  wg-bot:
+    build: .
+    image: laetitia/wg-bot:v1.0
+    container_name: wg-bot-container
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/app

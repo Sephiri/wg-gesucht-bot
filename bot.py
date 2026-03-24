@@ -6,7 +6,7 @@ import requests
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # läd Variablen aus .env
@@ -148,11 +148,18 @@ async def main():
 
         # Nachtruhe (00:00 bis 07:00 Uhr)
         if 0 <= hour < 7:
-            pause_msg = f"[{now.strftime('%H:%M:%S')}] Nachtruhe aktiv. Bot schläft bis 07:00"
+            target_time = now.replace(hour=7, minute=0, second=0, microsecond=0)
+
+            wait_seconds = (target_time - now).total_seconds()
+            jitter = random.randint(0, 900)
+            total_wait_seconds = wait_seconds + jitter
+
+            wakeup_time = target_time + timedelta(seconds=jitter)
+            pause_msg = f"Nachtruhe aktiv. Bot schläft bis {wakeup_time.strftime('%H:%M:%S')}"
             print(pause_msg)
             send_telegram_message(pause_msg)
-            # überprüft erneut alle 30 min
-            await asyncio.sleep(1800)
+
+            await asyncio.sleep(total_wait_seconds)
             continue
 
         print(f"[{now.strftime('%H:%M')}]")

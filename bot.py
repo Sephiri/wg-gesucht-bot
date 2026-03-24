@@ -109,7 +109,9 @@ async def run_bot():
                     # neue Seite mit Anzeige, scrolle nach unten und klicke auf akualisieren
                     await page.wait_for_url(f"https://www.wg-gesucht.de/angebot-bearbeiten.html?action=update_offer&offer_id={aid}", wait_until='networkidle')
                     update_button = page.locator('#update_offer')
+                    await update_button.wait_for(state="visible")
                     await update_button.scroll_into_view_if_needed()
+                    await human_delay()
                     await update_button.click()
                     # warte bis "Anzeige aktualisiert" aufgetaucht ist und gehe dann zurück zur Anzeigen-Übersicht
                     await page.locator('#main_content').locator('i.update_offer_message').wait_for(state="visible")

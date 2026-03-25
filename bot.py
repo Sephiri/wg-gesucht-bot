@@ -8,7 +8,6 @@ from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 from datetime import datetime, timedelta
 
-
 # läd Variablen aus .env
 load_dotenv()
 
@@ -49,18 +48,11 @@ async def run_bot():
     async with Stealth().use_async(async_playwright()) as p:
         # 1. Browser und dynamischer User Agend (UA)
         browser = await p.chromium.launch(headless=True)
-
-        temp_page = await browser.new_page()
-        clean_ua = (await temp_page.evaluate("navigator.userAgent")).replace("HeadlessChrome", "Chrome")
-        await temp_page.close()
-
-        # Arbeits-Kontext mit dem sauberen UA starten
-        context = await browser.new_context(user_agent=clean_ua, viewport={'width': 1920, 'height': 1080})
+        context = await browser.new_context(viewport={'width': 1920, 'height': 1080})
         #context.set_default_timeout(5000)
         #context.set_default_navigation_timeout(15000)
         page = await context.new_page()
-
-        print(f"Bot startet mit UA: {clean_ua}")
+        print("Bot startet mit UA:", await page.evaluate("navigator.userAgent"))
 
         try:
             await page.goto("https://www.wg-gesucht.de/", wait_until="networkidle")
@@ -97,6 +89,7 @@ async def run_bot():
             # 5. Anzeigen bearbeiten / aktualisieren
             my_offers = page.locator('#my_offers')
             asset_ids = asset_ids_raw.split(",")
+            all_successful = True
             for aid in asset_ids:
                 try:
                     three_dots = my_offers.locator(f'span[data-asset_id="{aid}"]')
@@ -109,38 +102,34 @@ async def run_bot():
                     # neue Seite mit Anzeige, scrolle nach unten und klicke auf akualisieren
                     await page.wait_for_url(f"https://www.wg-gesucht.de/angebot-bearbeiten.html?action=update_offer&offer_id={aid}", wait_until='networkidle')
                     update_button = page.locator('#update_offer')
+                    await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                     await update_button.wait_for(state="visible")
-                    await update_button.scroll_into_view_if_needed()
                     await human_delay()
                     await update_button.click()
                     # warte bis "Anzeige aktualisiert" aufgetaucht ist und gehe dann zurück zur Anzeigen-Übersicht
                     await page.locator('#main_content').locator('i.update_offer_message').wait_for(state="visible")
-                    await page.screenshot(path="test.png")
                     await page.go_back()
                     await page.wait_for_url(my_offers_url)
                 except Exception as e:
-                    error_text = f"Anzeige {aid} konnte nicht bearbeitet werden. Details: {str(e)}"
-                    print(error_text)
-                    await page.screenshot(path="debug.png")
-                    send_telegram_photo(error_text, "debug.png")
+                    all_successful = False
+                    await handle_event(page, f"Anzeige {aid} konnte nicht bearbeitet werden. Details: {str(e)}", f"debug{aid}.png")
+                    if page.url != my_offers_url:
+                        await page.goto(my_offers_url) 
+                        await page.wait_for_url(my_offers_url)
 
-            await page.screenshot(path="check.png")
-            send_telegram_photo("✅ WG-Gesucht: Anzeigen erfolgreich aktualisiert!", "check.png")
-            print("Screenshot unter check.png gespeichert.")
+            if all_successful:
+                await handle_event(page, "✅ WG-Gesucht: Anzeigen erfolgreich aktualisiert!", "check.png")
 
         except Exception as e:
-            error_msg = f"❌ Fehler: {str(e)}"
-            print(error_msg)
-            await page.screenshot(path="debug.png")
-            send_telegram_photo(
-                caption=f"📸:\n{str(e)[:150]}...", # Caption auf 150 Zeichen kürzen
-                photo_path="debug.png"
-            )
-            send_telegram_message(error_msg)
+            await handle_event(page, f"❌ Fehler: {str(e)}", "debug.png")
 
         finally:
             await browser.close()
 
+async def handle_event(page, msg, img_path):
+    print(msg)
+    await page.screenshot(path=img_path)
+    send_telegram_photo(msg, img_path)
 
 async def main():
     tz_berlin = pytz.timezone('Europe/Berlin')

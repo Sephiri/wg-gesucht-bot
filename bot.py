@@ -3,13 +3,14 @@ import random
 import os
 import pytz
 import requests
-from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from pathlib import Path
 
-# läd Variablen aus .env
-load_dotenv()
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 def send_telegram_message(message):
     token = os.getenv("TELEGRAM_API_TOKEN")
@@ -118,7 +119,7 @@ async def run_bot():
                         await page.wait_for_url(my_offers_url)
 
             if all_successful:
-                await handle_event(page, "✅ WG-Gesucht: Anzeigen erfolgreich aktualisiert!", "check.png")
+                await handle_event(page, "( ͡❛ ͜ʖ ͡❛) 👉 ✅ WG-Gesucht: Anzeigen erfolgreich aktualisiert!", "check.png")
 
         except Exception as e:
             await handle_event(page, f"❌ Fehler: {str(e)}", "debug.png")

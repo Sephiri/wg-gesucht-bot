@@ -35,3 +35,9 @@ WG_GESUCHT_PASSWORD=your_password
 ```bash
 docker compose up -d --build
 ```
+
+### 4. Usage
+commands to use in telegram chat
+/start : starts the bot in the telegram chat 
+/stop : stops the bot (container remains running)
+/status : return if bot is running

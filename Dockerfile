@@ -10,5 +10,5 @@ COPY . .
 
 ENV TZ=Europe/Berlin
 
-# Starte den Bot
-CMD ["python3", "bot.py"]
+# Starte den Telegram Controller (steuert bot.py)
+CMD ["python3", "telegram_controller.py"]

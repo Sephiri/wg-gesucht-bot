@@ -3,3 +3,4 @@ playwright-stealth
 python-dotenv
 requests
 pytz
+python-telegram-bot

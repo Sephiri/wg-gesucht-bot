@@ -14,12 +14,34 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 ALLOWED_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+STATE_FILE = Path("/app/bot_state")
 
 bot_process: asyncio.subprocess.Process | None = None
 
 
+def save_state(running: bool):
+    STATE_FILE.write_text("running" if running else "stopped")
+
+
+def load_state() -> bool:
+    if not STATE_FILE.exists():
+        return True  # Standardmäßig starten beim ersten Start
+    return STATE_FILE.read_text().strip() == "running"
+
+
 def is_authorized(update: Update) -> bool:
     return str(update.effective_chat.id) == ALLOWED_CHAT_ID
+
+
+async def _launch_bot() -> asyncio.subprocess.Process:
+    proc = await asyncio.create_subprocess_exec(
+        "python3", "bot.py",
+        cwd="/app",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    asyncio.create_task(_stream_logs(proc))
+    return proc
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -31,17 +53,10 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Bot läuft bereits.")
         return
 
-    bot_process = await asyncio.create_subprocess_exec(
-        "python3", "bot.py",
-        cwd="/app",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
-    )
+    bot_process = await _launch_bot()
+    save_state(running=True)
     logger.info("bot.py gestartet (PID %s)", bot_process.pid)
     await update.message.reply_text(f"▶️ Bot gestartet (PID {bot_process.pid})")
-
-    # Log-Output im Hintergrund lesen
-    asyncio.create_task(_stream_logs(bot_process))
 
 
 async def cmd_stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -60,6 +75,7 @@ async def cmd_stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
         bot_process.kill()
         await bot_process.wait()
 
+    save_state(running=False)
     logger.info("bot.py gestoppt")
     await update.message.reply_text("⏹️ Bot gestoppt.")
     bot_process = None
@@ -70,13 +86,12 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if bot_process and bot_process.returncode is None:
-        await update.message.reply_text(f"✅ Bot läuft.)")
+        await update.message.reply_text("✅ Bot läuft.")
     else:
         await update.message.reply_text("❌ Bot läuft nicht.")
 
 
 async def _stream_logs(proc: asyncio.subprocess.Process):
-    """Liest stdout/stderr vom Subprocess und loggt es."""
     while True:
         line = await proc.stdout.readline()
         if not line:
@@ -87,14 +102,11 @@ async def _stream_logs(proc: asyncio.subprocess.Process):
 
 async def auto_start(application):
     global bot_process
-    bot_process = await asyncio.create_subprocess_exec(
-        "python3", "bot.py",
-        cwd="/app",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
-    )
-    logger.info("bot.py automatisch gestartet (PID %s)", bot_process.pid)
-    asyncio.create_task(_stream_logs(bot_process))
+    if load_state():
+        bot_process = await _launch_bot()
+        logger.info("bot.py automatisch gestartet (PID %s)", bot_process.pid)
+    else:
+        logger.info("bot.py bleibt gestoppt (letzter Zustand: gestoppt)")
 
 
 def main():

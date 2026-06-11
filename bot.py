@@ -131,6 +131,7 @@ async def handle_event(page, msg, img_path):
     print(msg)
     await page.screenshot(path=img_path)
     send_telegram_photo(msg, img_path)
+    Path(img_path).unlink(missing_ok=True)
 
 async def main():
     tz_berlin = pytz.timezone('Europe/Berlin')

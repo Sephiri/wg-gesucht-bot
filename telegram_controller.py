@@ -85,13 +85,25 @@ async def _stream_logs(proc: asyncio.subprocess.Process):
     logger.info("bot.py beendet (exit code %s)", proc.returncode)
 
 
+async def auto_start(application):
+    global bot_process
+    bot_process = await asyncio.create_subprocess_exec(
+        "python3", "bot.py",
+        cwd="/app",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    logger.info("bot.py automatisch gestartet (PID %s)", bot_process.pid)
+    asyncio.create_task(_stream_logs(bot_process))
+
+
 def main():
     if not TELEGRAM_TOKEN:
         raise RuntimeError("TELEGRAM_API_TOKEN nicht gesetzt")
     if not ALLOWED_CHAT_ID:
         raise RuntimeError("TELEGRAM_CHAT_ID nicht gesetzt")
 
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_TOKEN).post_init(auto_start).build()
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("stop", cmd_stop))
     app.add_handler(CommandHandler("status", cmd_status))

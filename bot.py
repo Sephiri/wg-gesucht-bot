@@ -96,10 +96,10 @@ async def run_bot():
                     three_dots = my_offers.locator(f'span[data-asset_id="{aid}"]')
                     await three_dots.click()
                     await human_delay()
-                    # dropdown taucht auf, klicke auf Bearbeiten + Fotos
+                    # dropdown taucht auf, klicke auf Bearbeiten
                     dropdown_menu = my_offers.locator(f'#my_asset_{aid}').locator('ul[role="menu"]')
                     await dropdown_menu.wait_for(state="visible")
-                    await dropdown_menu.get_by_text('Bearbeiten + Fotos').click()
+                    await dropdown_menu.get_by_text('Bearbeiten').click()
                     # neue Seite mit Anzeige, scrolle nach unten und klicke auf akualisieren
                     await page.wait_for_url(f"https://www.wg-gesucht.de/angebot-bearbeiten.html?action=update_offer&offer_id={aid}", wait_until='load', timeout=45000)
                     update_button = page.locator('#update_offer')

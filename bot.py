@@ -12,6 +12,8 @@ from pathlib import Path
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
+BOT_RUN_TIMEOUT_SECONDS = 600
+
 def send_telegram_message(message):
     token = os.getenv("TELEGRAM_API_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
@@ -50,8 +52,8 @@ async def run_bot():
         # 1. Browser und dynamischer User Agend (UA)
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(viewport={'width': 1920, 'height': 1080})
-        #context.set_default_timeout(5000)
-        #context.set_default_navigation_timeout(15000)
+        context.set_default_timeout(15000)
+        context.set_default_navigation_timeout(45000)
         page = await context.new_page()
         print("Bot startet mit UA:", await page.evaluate("navigator.userAgent"))
 
@@ -153,10 +155,18 @@ async def main():
             send_telegram_message(pause_msg)
 
             await asyncio.sleep(total_wait_seconds)
+            wakeup_msg = "Nachtruhe beendet. Starte nächsten Durchgang."
+            print(wakeup_msg)
+            send_telegram_message(wakeup_msg)
             continue
 
         print(f"[{now.strftime('%H:%M')}]")
-        await run_bot()
+        try:
+            await asyncio.wait_for(run_bot(), timeout=BOT_RUN_TIMEOUT_SECONDS)
+        except asyncio.TimeoutError:
+            timeout_msg = f"❌ Bot-Durchgang nach {BOT_RUN_TIMEOUT_SECONDS // 60} Minuten abgebrochen (Timeout)."
+            print(timeout_msg)
+            send_telegram_message(timeout_msg)
 
         # Randomisiertes Intervall: 1 Stunde +/- 15 Minuten (2700 bis 4500 Sek)
         wait_time = random.randint(2700, 4500)

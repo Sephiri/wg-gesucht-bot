@@ -78,7 +78,7 @@ async def run_bot():
             await human_delay()
             await page.locator('#login_password').fill(password)
             await human_delay()
-            await page.locator('#login_submit').click()
+            await page.locator('#login_submit').click(timeout=30000)
             await human_delay()
 
             # 4. Anzeigen aufrufen

@@ -76,6 +76,8 @@ async def run_bot():
             # playwright wartet automatisch vor fill, click und check bis das Element handlungsbereit ist
             await page.locator('#pre_session_email').fill(email)
             await human_delay()
+            await page.get_by_text('Weiter').click()
+            await human_delay()
             await page.locator('#login_password').fill(password)
             await human_delay()
             await page.locator('button[type="submit"]').click()

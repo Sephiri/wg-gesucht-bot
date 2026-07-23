@@ -134,8 +134,16 @@ async def auto_start(application):
     if load_state():
         bot_process = await _launch_bot()
         logger.info("bot.py automatisch gestartet (PID %s)", bot_process.pid)
+        await application.bot.send_message(
+            chat_id=ALLOWED_CHAT_ID,
+            text=f"✅ Container gestartet.",
+        )
     else:
         logger.info("bot.py bleibt gestoppt (letzter Zustand: gestoppt)")
+        await application.bot.send_message(
+            chat_id=ALLOWED_CHAT_ID,
+            text="ℹ️ Container gestartet, aber bot.py bleibt gestoppt."
+        )
 
 
 def main():

@@ -74,11 +74,11 @@ async def run_bot():
             await human_delay()
 
             # playwright wartet automatisch vor fill, click und check bis das Element handlungsbereit ist
-            await page.locator('#login_email_username').fill(email)
+            await page.locator('#pre_session_email').fill(email)
             await human_delay()
             await page.locator('#login_password').fill(password)
             await human_delay()
-            await page.locator('#login_submit').click(timeout=30000)
+            await page.locator('button[type="submit"]').click()
             await human_delay()
 
             # 4. Anzeigen aufrufen
@@ -141,9 +141,9 @@ async def main():
         now = datetime.now(tz_berlin)
         hour = now.hour
 
-        # Nachtruhe (00:00 bis 07:00 Uhr)
-        if 0 <= hour < 7:
-            target_time = now.replace(hour=7, minute=0, second=0, microsecond=0)
+        # Nachtruhe (00:00 bis 08:00 Uhr)
+        if 0 <= hour < 8:
+            target_time = now.replace(hour=8, minute=0, second=0, microsecond=0)
 
             wait_seconds = (target_time - now).total_seconds()
             jitter = random.randint(0, 900)
@@ -168,8 +168,8 @@ async def main():
             print(timeout_msg)
             send_telegram_message(timeout_msg)
 
-        # Randomisiertes Intervall: 1 Stunde +/- 15 Minuten (2700 bis 4500 Sek)
-        wait_time = random.randint(2700, 4500)
+        # Randomisiertes Intervall: 1:30 Stunde +/- 15 Minuten (4500 bis 6300 Sek)
+        wait_time = random.randint(4500, 6300)
 
         next_run = wait_time / 60
         after_msg = f"Durchgang beendet. Nächstes Update in ca. {next_run:.1f} Minuten."

@@ -3,7 +3,7 @@
 A dockerized automation tool for WG-Gesucht, built with Python and Playwright. This bot refreshes own listings hourly and sends instant notifications via Telegram.
 
 ## Key Features
-- **Hourly Refreshes:** Refreshes listings between 45 and 75min during the day and pauses between 00:00 and 07:00 tz=Berlin/Europe
+- **Hourly Refreshes:** Refreshes listings between 75 and 105min during the day and pauses between 00:00 and 08:00 tz=Berlin/Europe:15h
 - **Stealth Mode:** Utilizes Playwright with stealth configurations to bypass bot detection.
 - **Instant Alerts:** Sends detailed notifications directly to your Telegram chat.
 - **Dockerized:** Fully containerized for easy deployment on servers (e.g., Hetzner).

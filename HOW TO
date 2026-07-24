@@ -1,0 +1,5 @@
+Testen:
+
+docker exec -it wg-bot-container bash
+cd /app
+python3 -u bot.py

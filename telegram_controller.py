@@ -11,6 +11,10 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
+# nur WARNING und ERROR von httpx, httpcore und telegram anzeigen, um die Log-Ausgabe zu reduzieren
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("telegram").setLevel(logging.WARNING)
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 ALLOWED_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -41,7 +45,7 @@ async def _launch_bot() -> asyncio.subprocess.Process:
         return bot_process
 
     proc = await asyncio.create_subprocess_exec(
-        "python3", "bot.py",
+        "python3", "-u", "bot.py",
         cwd="/app",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,

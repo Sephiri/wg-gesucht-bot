@@ -76,11 +76,13 @@ async def run_bot():
             # playwright wartet automatisch vor fill, click und check bis das Element handlungsbereit ist
             await page.locator('#pre_session_email').fill(email)
             await human_delay()
-            await page.get_by_text('Weiter').click()
+            pre_session_form = page.locator("#pre_session_form")
+            await pre_session_form.get_by_role("button", name="Weiter").click()
             await human_delay()
             await page.locator('#login_password').fill(password)
             await human_delay()
-            await page.locator('button[type="submit"]').click()
+            login_form = page.locator("#login_form")
+            await login_form.locator('button[type="submit"]').click()
             await human_delay()
 
             # 4. Anzeigen aufrufen
@@ -95,6 +97,7 @@ async def run_bot():
             my_offers = page.locator('#my_offers')
             asset_ids = asset_ids_raw.split(",")
             all_successful = True
+
             for aid in asset_ids:
                 try:
                     three_dots = my_offers.locator(f'span[data-asset_id="{aid}"]')
